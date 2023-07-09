@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>註冊頁面</title>
+    <style>
+        /* CSS  */
+    </style>
+</head>
+
+<body>
+    <h1>註冊</h1>
+
+    <form id="registerForm" method="post" enctype="multipart/form-data">
+
+        <div>
+            <label for="userName">User Name:</label>
+            <input type="text" id="userName" name="userName" required>
+            <div id="userNameError" style="color: red; display: none;">請輸入有效的手機號碼</div>
+        </div>
+
+        <div>
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
+            <div id="emailError" style="color: red; display: none;">請輸入有效的電子郵件</div>
+        </div>
+
+        <div>
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+
+        <div>
+            <label for="coverImage">Cover Image:</label>
+            <input type="file" id="coverImage" name="coverImage">
+        </div>
+
+        <div>
+            <label for="biography">Biography:</label>
+            <textarea id="biography" name="biography"></textarea>
+        </div>
+
+        <div>
+            <button type="button" id="registerButton">註冊</button>
+        </div>
+    </form>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(function() {
+            $('#registerButton').click(function() {
+                if (validateForm()) {
+                    registerUser();
+                }
+            });
+        });
+
+        function validateForm() {
+            var userNameInput = $('#userName');
+            var emailInput = $('#email');
+
+            var userName = userNameInput.val();
+            var email = emailInput.val();
+
+            var userNamePattern = /^\d{10}$/;
+            var emailPattern = /^\S+@\S+\.\S+$/;
+
+            var isValid = true;
+
+            if (!userNamePattern.test(userName)) {
+                $('#userNameError').show();
+                isValid = false;
+            } else {
+                $('#userNameError').hide();
+            }
+
+            if (!emailPattern.test(email)) {
+                $('#emailError').show();
+                isValid = false;
+            } else {
+                $('#emailError').hide();
+            }
+
+            return isValid;
+        }
+
+        function registerUser() {
+            var formData = new FormData($('#registerForm')[0]);
+
+            $.ajax({
+                url: '/api/demo/register',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    // Handle success response
+                    console.log(response);
+                    alert('註冊成功');
+                    window.location.href = "/view/postList";
+                },
+                error: function (response) {
+                    var errorMessage = response.responseJSON.message;
+                    if (errorMessage === "Username already exists") {
+                        alert("此號碼已註冊過");
+                    } else {
+                        alert("發生錯誤: " + errorMessage);
+                    }
+                }
+            });
+
+        }
+    </script>
+</body>
+
+</html>

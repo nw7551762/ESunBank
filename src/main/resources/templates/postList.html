@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>文章列表</title>
+    <style>
+        img {
+            width: 100px;
+            height: 80px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>文章列表</h1>
+
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Content</th>
+            <th>CreatedDate</th>
+            <th>Image</th>
+            <th>User</th>
+            <th>操作</th>
+        </tr>
+        <tbody id="postTableBody">
+            <tr th:each="post, postGroup : ${posts}"
+                th:data-post-group="${postGroup.index}">
+                <td th:text="${post.postId}"></td>
+                <td th:text="${post.content}"></td>
+                <td th:text="${post.createdDate}"></td>
+                <td><img th:if="${post.image != null}"
+                        th:src="@{'/api/demo/image/' + ${post.postId}}" alt="Image">
+                </td>
+                <td th:text="${post.user.username}"></td>
+                <td>
+                    <button class="editButton" th:data-postid="${post.postId}">編輯</button>
+                    <button class="deleteButton" th:data-postid="${post.postId}">刪除</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <button id="createPostButton">Create Post</button>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+	    var username = localStorage.getItem('username');
+	    var jwt = localStorage.getItem('jwt');
+		console.log(username);
+		console.log(jwt);
+	    
+        $(function () {
+            loadPosts();
+
+            // Bind a click event handler to the button
+            $('#createPostButton').click(function () {
+                window.location.href = 'createPost';
+            });
+
+            // Bind click event handlers for edit and delete buttons
+            $(document).on('click', '.editButton', function () {
+                var postId = $(this).parent().siblings().eq(0).text();
+                editPost(postId);
+            });
+
+            $(document).on('click', '.deleteButton', function () {
+                var postId = $(this).parent().siblings().eq(0).text();
+                confirmDelete(postId);
+            });
+        });
+
+        function loadPosts() {
+            $.ajax({
+                url: '/api/demo/allPost',
+                type: 'GET',
+                dataType: 'json',
+                success: function (posts) {
+                    var tableBody = $('#postTableBody');
+
+                    $.each(posts, function (index, post) {
+                        var row = $('<tr>');
+                        row.append($('<td>').text(post.postId).addClass('getPostItem'));
+                        row.append($('<td>').text(post.content).addClass('getPostItem'));
+                        row.append($('<td>').text(post.createdDate).addClass('getPostItem'));
+                        if (post.image != null) {
+                            row.append($('<td>').append($('<img>').attr('src', '/api/demo/image/' + post.postId).attr('alt', 'Image')));
+                        } else {
+                            row.append($('<td>'));
+                        }
+                        row.append($('<td>').text(post.user.username).addClass('getPostItem'));
+                        row.append($('<td>').html('<button class="editButton">編輯</button> <button class="deleteButton">刪除</button>'));
+                        row.attr('data-post-group', index);
+                        tableBody.append(row);
+                    });
+
+                    // Bind click event handler for getPostItem elements
+                    tableBody.on('click', '.getPostItem', function () {
+                        var postGroup = $(this).parent().data('post-group');
+                        getPost(postGroup);
+                    });
+                },
+                error: function () {
+                    alert('載入發文失敗');
+                }
+            });
+        }
+
+        function editPost(postId) {
+            // Perform AJAX request to edit post
+            window.location.href = '/view/redirectToEdit/' + postId;
+        }
+
+        function confirmDelete(postId) {
+            // Ask for confirmation before deleting the post
+            if (confirm('確定要刪除此篇文章嗎？')) {
+                deletePost(postId);
+            }
+        }
+
+        function deletePost(postId) {
+            // Perform AJAX request to delete post
+            $.ajax({
+                url: '/api/demo/auth/post/' + postId,
+                type: 'DELETE',
+                success: function (response) {
+                    // Handle success response
+                    // Remove the deleted row from the table
+                    console.log(postId);
+                    alert("刪除成功");
+                    $('[data-post-group]').each(function () {
+                        var postGroup = $(this).data('post-group');
+                        var rowPostId = $(this).find('td:first').text();
+                        if (rowPostId == postId) {
+                            $(this).remove();
+                        }
+                    });
+                },
+                error: function (responce) {
+                	console.log( responce );
+                    alert('刪除發文失敗 '+responce);
+                }
+            });
+        }
+
+        function getPost(postGroup) {
+            var postId = $('[data-post-group="' + postGroup + '"]').find('td:first').text();
+            window.location.href = '/view/redirectToPost/' + postId;
+        }
+    </script>
+</body>
+
+</html>

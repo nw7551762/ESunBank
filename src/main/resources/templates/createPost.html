@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Post</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+        	var username = localStorage.getItem('username');
+            var jwt = localStorage.getItem('jwt');
+            console.log( username );
+            console.log( jwt );
+            
+            
+            $('#createPostForm').submit(function(event) {
+                event.preventDefault(); // Prevent default form submission
+                
+                var formData = new FormData();
+                formData.append('content', $('#content').val());
+                formData.append('image', $('#image')[0].files[0]);  // 添加文件到 formData
+
+                $.ajax({
+                    url: '/api/demo/auth/post',
+                    type: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + jwt,
+                        'X-Username': username
+                    },
+                    data: formData,
+                    processData: false,  // 告诉 jQuery 不要处理数据
+                    contentType: false,  // 告诉 jQuery 不要设置 contentType
+                    success: function(response) {
+                        // Handle success
+                        alert("post success");
+                    	window.location.href = '/view/postList';
+                    },
+                    error: function(xhr, status, error) {
+                        // Handle error
+                    	alert('請登入網站');
+				        window.location.href = '/view/loginPage';
+                    }
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <h1>Create Post</h1>
+
+    <form id="createPostForm" method="post">
+        <div>
+            <label for="content">Content:</label>
+            <textarea id="content" name="content" required></textarea>
+        </div>
+
+        <div>
+            <label for="image">Image:</label>
+            <input type="file" id="image" name="image">
+        </div>
+
+        <div>
+            <button type="submit">Create Post</button>
+        </div>
+    </form>
+</body>
+</html>

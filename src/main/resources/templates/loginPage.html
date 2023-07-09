@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Login</title>
+    <style>
+        /* CSS styles for the login page */
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#loginForm').submit(function(event) {
+                event.preventDefault(); // 阻止表单默认提交行为
+
+                var username = $('#username').val();
+                var password = $('#password').val();
+
+                // 发送 AJAX 请求
+                $.ajax({
+                    url: '/login',
+                    type: 'POST',
+                    data: {
+                        username: username,
+                        password: password
+                    },
+                    success: function(data, textStatus, jqXHR) {
+                    	console.log( data )
+                    	localStorage.setItem('jwt', data.jwt);
+                        localStorage.setItem('username', data.username);
+                        alert('right credentials ');
+                    	window.location.href = '/view/postList';
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        if (textStatus === 401) {
+                        	//帳密錯誤
+                            alert('Invalid credentials');
+                            window.location.href = '/view/loginPage';
+                        } else {
+                            // 其他错误处理
+                            console.error(error);
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <h1>Login</h1>
+
+    <form id="loginForm" method="post">
+        <div>
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required>
+        </div>
+
+        <div>
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+
+        <div>
+            <button type="submit">Login</button>
+        </div>
+    </form>
+</body>
+</html>

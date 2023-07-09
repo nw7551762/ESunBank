@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>貼文詳情</title>
+    <style>
+        img {
+            max-width: 300px;
+            max-height: 200px;
+        }
+         .comment {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>貼文詳情</h1>
+
+    <div id="postDetails">
+        <h2>Loading...</h2>
+        
+        <h2 th:text="${post.postId}" id="postId"></h2>
+    </div>
+
+    <div id="commentSection">
+        <h2>留言區</h2>
+        <form id="commentForm">
+            <label for="comment">留言：</label>
+            <textarea id="comment" name="comment" rows="4" cols="50"></textarea>
+            <br>
+            <button type="submit">提交留言</button>
+        </form>
+        <div id="comments">
+            <!-- 留言将动态添加到此处 -->
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+        	var username = localStorage.getItem('username');
+        	var jwt = localStorage.getItem('jwt');
+        	console.log('username: ' + username);
+        	console.log('jwt: ' + jwt);
+        	
+        	$('#username').text(username);
+            var postId = $('#postId').text();
+            
+            $.ajax({
+                url: '/api/demo/post1/' + postId,
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    var post = response;
+                    var postDetails = $('#postDetails');
+					
+                    var html = '<p>Post ID: ' + post.postId + '</p>';
+                    html += '<p>User: ' + post.user.username + '</p>';
+                    html += '<h2>' + post.content + '</h2>';
+                    
+                    html += '<p>Created Date: ' + post.createdDate + '</p>';
+                    if (post.image != null) {
+                        html += '<img src="/api/demo/image/' + postId + '" alt="Image">';
+                    }
+
+                    postDetails.html(html);
+                },
+                error: function() {
+                    alert('查看貼文失敗');
+                }
+            });
+
+            // 获取所有留言
+            $.ajax({
+                url: '/api/demo/allComment/' + postId,
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    var comments = response;
+                    var commentsSection = $('#comments');
+
+                    // 添加每条留言到留言区域
+                    for (var i = 0; i < comments.length; i++) {
+                        var comment = comments[i];
+                        var commentElement = $('<div>').addClass('comment');
+                        commentElement.append($('<p>').text(comment.content));
+                        commentElement.append($('<p>').text('Username: ' + comment.user.username));
+                        commentElement.append($('<p>').text('Created At: ' + comment.createdAt));
+                        commentsSection.append(commentElement);
+                    }
+                },
+                error: function() {
+                    alert('获取留言失败');
+                }
+            });
+
+            $('#commentForm').submit(function(event) {
+                event.preventDefault(); 
+
+                var comment = $('#comment').val();
+
+                $.ajax({
+				    url: '/api/demo/auth/comment/' +username+ "/"+postId ,
+				    type: 'POST',
+				    headers: {
+				        'Authorization': 'Bearer ' + jwt,
+				        'X-Username': username
+				    },
+				    data: {
+				        comment: comment
+				    },
+				    success: function(response) {
+				        addCommentToCommentArea();
+				    },
+				    error: function() {
+				        alert('請登入網站');
+				        window.location.href = '/view/loginPage';
+				    }
+				});
+
+                
+                function addCommentToCommentArea(){
+                	var commentElement = $('<div>').addClass('comment');
+                    commentElement.append($('<p>').text(comment));
+                    commentElement.append($('<p>').text('Username: ' + username));
+                    var now = new Date();
+                    commentElement.append($('<p>').text('Created At: ' + now));
+                    $('#comments').append(commentElement);
+                    $('#comment').val('');
+                }
+                
+            });
+        });
+    </script>
+</body>
+</html>

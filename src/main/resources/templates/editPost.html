@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Edit Post</title>
+    <style>
+        img {
+            max-width: 300px;
+            max-height: 200px;
+        }
+        div {
+        	margin-left: 30px;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Edit Post</h1>
+
+    <div>
+        <label>ID:</label>
+        <span th:text="${post.postId}" id="postId"></span>
+    </div>
+    
+    <div>
+        <label>CreatedDate:</label>
+        <span th:text="${post.createdDate}"></span>
+    </div>
+    <div>
+        <label>Image:</label>
+        <img th:if="${post.image != null}" th:src="@{'/api/demo/image/' + ${post.postId}}" alt="Image">
+        <input type="file" name="image" id="image">
+    </div>
+    <div>
+        <label>User:</label>
+        <span th:text="${post.user.username}"></span>
+    </div>
+
+    <div>
+        <label for="content">Content:</label>
+        <textarea name="content" id="content" rows="4" cols="50" th:text="${post.content}"></textarea>
+    </div>
+    <div>
+        <button id="saveButton">Save</button>
+    </div>
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $('#saveButton').click(function() {
+       		console.log($('#postId').text());
+            var postId = $('#postId').text(); 
+            var content = $('#content').val();
+            var image = $('#image')[0].files[0];
+            savePost(postId, content, image);
+        });
+
+        function savePost(postId, content, image) {
+            var formData = new FormData();
+            formData.append('postId', postId);
+            formData.append('content', content);
+            formData.append('image', image);
+
+            $.ajax({
+                url: '/api/demo/post1/' + postId,
+                type: 'PUT',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function(response) {
+                	alert('保存發文成功');
+                    window.location.href = '/view/postList'
+                },
+                error: function() {
+                    alert('保存發文失敗');
+                }
+            });
+        }
+    </script>
+    
+</body>
+
+</html>
