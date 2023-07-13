@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import esun.auth.AuthenticationResponse;
+import esun.exception.UsernameAlreadyExistsException;
 import esun.jwt.JwtService;
 import esun.util.JwtTokenUtil;
 import lombok.var;
@@ -24,15 +25,18 @@ public class UserService {
 	private PasswordService passwordService;
 	
 	@Autowired
-	private JwtService jwtService;
-	
-	@Autowired
 	private JwtTokenUtil jwtTokenUtil;
 
     public UserService() {
     }
     
-    private String generateSalt() {
+    public UserService(UserRepository userRepository, PasswordService passwordService, JwtTokenUtil jwtTokenUtil ) {
+    	this.userRepository = userRepository ;
+    	this.passwordService = passwordService ;
+    	this.jwtTokenUtil = jwtTokenUtil ;
+	}
+
+	private String generateSalt() {
     	// 生成安全的隨機數字鹽值
         SecureRandom secureRandom = new SecureRandom();
         byte[] salt = new byte[16];
@@ -53,6 +57,11 @@ public class UserService {
     }
     
     public AuthenticationResponse registerUser( User user ) {
+    	
+    	if ( userRepository.existsByUsername(user.getUsername() )) {
+	        throw new UsernameAlreadyExistsException("Username already exists");
+	    }
+    	
     	user = setSaltedPassword(user);
         userRepository.save(user);
         var jwtToken = jwtTokenUtil.generateToken( user.getUsername());

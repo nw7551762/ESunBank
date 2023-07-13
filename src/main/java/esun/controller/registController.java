@@ -50,19 +50,19 @@ public class registController {
 	        throw new InvalidEmailException("Invalid email format");
 	    }
 
-	    if (userService.existsByUsername(username)) {
-	        throw new UsernameAlreadyExistsException("Username already exists");
-	    }
-
 	    // 執行註冊操作
 	    try {
 	        userService.registerUser(user);
-	        System.out.println(" save user ");
+	        System.out.println("save user");
 	        return new ModelAndView("registSuccess");
+	    } catch (UsernameAlreadyExistsException e) {
+	        e.printStackTrace();
+	        throw e;
 	    } catch (Exception e) {
 	        e.printStackTrace();
 	    }
-	    return new ModelAndView("registerPage");
+		return new ModelAndView("registerPage");
+
 	}
 
 	private boolean isValidPhoneNumber(String phoneNumber) {
